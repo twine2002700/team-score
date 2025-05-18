@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Team Game</title>
+<style>
+  body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background-color 0.5s ease;
+    margin: 0; /* Reset default body margin */
+    padding: 20px; /* Add some padding around content */
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+  }
+
+  body.time-up {
+    background-color: #ffdddd;
+  }
+
+  #game-container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-top: 20px;
+    width: 90%; /* Adjust width for smaller screens */
+    max-width: 800px; /* Limit width on larger screens */
+    display: flex;
+    justify-content: space-around;
+    flex-direction: row; /* Default to row for wider screens */
+    box-sizing: border-box;
+  }
+
+  .team-column {
+    flex: 1;
+    padding: 15px;
+    text-align: center;
+    margin: 5px; /* Add some margin between columns */
+  }
+
+  h2 {
+    margin-top: 0;
+  }
+
+  .team-name-input {
+    width: 80%;
+    margin-bottom: 10px;
+    padding: 8px;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    text-align: center;
+  }
+
+  #timer-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-direction: column; /* Stack controls on smaller screens */
+  }
+
+  #timer-controls label,
+  #timer-controls input,
+  #timer-controls button,
+  #timer-controls #timer {
+    margin-bottom: 5px; /* Add spacing between stacked elements */
+    width: 100%; /* Make controls take full width on smaller screens */
+    box-sizing: border-box;
+    text-align: center; /* Center text in controls */
+  }
+
+  #timer-controls input[type="number"] {
+    max-width: 80px; /* Limit width of number input */
+  }
+
+  #timer {
+    font-size: 1.5em;
+  }
+
+  .team-members {
+    list-style: none;
+    padding: 0;
+  }
+
+  .team-members li {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+  }
+
+  .team-members li:last-child {
+    border-bottom: none;
+  }
+
+  .team-members li.playing {
+    font-weight: bold;
+    background-color: #f0f0f0;
+  }
+
+  .score-button {
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    width: 80%; /* Adjust button width */
+    box-sizing: border-box;
+  }
+
+  #round-info {
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: center; /* Center round info */
+  }
+
+  #current-player-display {
+    text-align: center; /* Center current player info */
+    margin-bottom: 10px;
+  }
+
+  #message {
+    text-align: center; /* Center messages */
+  }
+
+  /* Media query for screens smaller than 600px (typical mobile) */
+  @media (max-width: 600px) {
+    #game-container {
+      flex-direction: column; /* Stack team columns on mobile */
+      align-items: center; /* Center team columns */
+    }
+
+    .team-column {
+      width: 90%; /* Make team columns take more width on mobile */
+      margin-bottom: 15px; /* Add more space between stacked columns */
+    }
+
+    .score-button {
+      width: 100%; /* Make score button full width on mobile */
+    }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Team Score Keeper</h1>
+
+  <div id="timer-controls">
+    <label for="duration">Set Timer (seconds):</label>
+    <input type="number" id="duration" value="30" min="1">
+    <button id="start-timer">Start Timer</button>
+    <div id="timer">Time: <span id="time-remaining">30</span></div>
+  </div>
+
+  <div id="game-container">
+    <div class="team-column">
+      <h2>Team 1</h2>
+      <input type="text" id="team1-name" class="team-name-input" value="Team 1">
+      <input type="text" id="team1-new-member" placeholder="Add Member">
+      <button onclick="addTeamMember('team1')">Add</button>
+      <ul id="team1-members" class="team-members"></ul>
+      <button class="score-button" onclick="addScore('team1')">Add Tally</button>
+      <div id="team1-score">Score: 0</div>
+    </div>
+
+    <div class="team-column">
+      <h2>Team 2</h2>
+      <input type="text" id="team2-name" class="team-name-input" value="Team 2">
+      <input type="text" id="team2-new-member" placeholder="Add Member">
+      <button onclick="addTeamMember('team2')">Add</button>
+      <ul id="team2-members" class="team-members"></ul>
+      <button class="score-button" onclick="addScore('team2')">Add Tally</button>
+      <div id="team2-score">Score: 0</div>
+    </div>
+  </div>
+
+  <div id="round-info">Round: <span id="current-round">1</span></div>
+  <div id="current-player-display">Current Player: <span id="current-player"></span></div>
+  <div id="message"></div>
+
+  <script>
+    let timeLeft = parseInt(document.getElementById("duration").value);
+    let timerInterval;
+    let round = 1;
+    let team1Score = 0;
+    let team2Score = 0;
+    let team1Members = [];
+    let team2Members = [];
+    let currentPlayer = "";
+    const flashDuration = 1500; // 1.5 seconds in milliseconds
+    const bodyElement = document.body;
+
+    const durationInput = document.getElementById("duration");
+    const startTimerButton = document.getElementById("start-timer");
+    const timeRemainingElement = document.getElementById("time-remaining");
+    const team1NameInput = document.getElementById("team1-name");
+    const team2NameInput = document.getElementById("team2-name");
+    const team1Heading = document.querySelector("#game-container .team-column:first-child h2");
+    const team2Heading = document.querySelector("#game-container .team-column:last-child h2");
+    const team1MembersList = document.getElementById("team1-members");
+    const team2MembersList = document.getElementById("team2-members");
+    const team1ScoreDisplay = document.getElementById("team1-score");
+    const team2ScoreDisplay = document.getElementById("team2-score");
+    const roundDisplay = document.getElementById("current-round");
+    const currentPlayerDisplay = document.getElementById("current-player");
+    const messageElement = document.getElementById("message");
+
+    function updateDisplay() {
+      timeRemainingElement.textContent = timeLeft;
+      team1ScoreDisplay.textContent = `Score: ${team1Score}`;
+      team2ScoreDisplay.textContent = `Score: ${team2Score}`;
+      roundDisplay.textContent = round;
+      currentPlayerDisplay.textContent = currentPlayer;
+
+      // Update team names in the headers using direct selectors
+      team1Heading.textContent = team1NameInput.value || "Team 1";
+      team2Heading.textContent = team2NameInput.value || "Team 2";
+
+      renderTeamMembers('team1');
+      renderTeamMembers('team2');
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = parseInt(durationInput.value);
+      if (isNaN(timeLeft) || timeLeft <= 0) {
+        alert("Please enter a valid timer duration.");
+        return;
+      }
+      bodyElement.classList.remove("time-up"); // Ensure the flash class is removed at the start of a new timer
+      updateDisplay();
+      startTimerButton.disabled = true;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timeRemainingElement.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          bodyElement.classList.add("time-up"); // Add the class to trigger the red flash
+          setTimeout(() => {
+            bodyElement.classList.remove("time-up"); // Remove the class after the flash duration
+            alert(`Time's up! Round ${round} over.`);
+            startTimerButton.disabled = false;
+            nextRound();
+          }, flashDuration);
+        }
+      }, 1000);
+    }
+
+    function addTeamMember(teamId) {
+      const inputElement = document.getElementById(`${teamId}-new-member`);
+      const memberName = inputElement.value.trim();
+      if (memberName) {
+        if (teamId === 'team1') {
+          team1Members.push(memberName);
+        } else {
+          team2Members.push(memberName);
+        }
+        inputElement.value = "";
+        renderTeamMembers(teamId);
+      }
+    }
+
+    function renderTeamMembers(teamId) {
+      const listElement = document.getElementById(`${teamId}-members`);
+      listElement.innerHTML = "";
+      const members = (teamId === 'team1') ? team1Members : team2Members;
+      members.forEach(member => {
+        const listItem = document.createElement("li");
+        listItem.textContent = member;
+        listItem.addEventListener("click", () => setCurrentPlayer(member));
+        if (member === currentPlayer) {
+          listItem.classList.add("playing");
+        }
+        listElement.appendChild(listItem);
+      });
+    }
+
+    function addScore(teamId) {
+      if (teamId === 'team1') {
+        team1Score++;
+      } else {
+        team2Score++;
+      }
+      updateDisplay();
+    }
+
+    function nextRound() {
+      round++;
+      currentPlayer = ""; // Reset current player for the new round
+      updateDisplay();
+      messageElement.textContent = `Starting Round ${round}`;
+    }
+
+    function setCurrentPlayer(playerName) {
+      currentPlayer = playerName;
+      updateDisplay();
+    }
+
+    startTimerButton.addEventListener("click", startTimer);
+
+    renderTeamMembers('team1');
+    renderTeamMembers('team2');
+    updateDisplay(); // Initial display update
+  </script>
+
+</body>
+</html>
