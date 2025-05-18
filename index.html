@@ -3,21 +3,139 @@
 <head>
 <title>Team Game</title>
 <style>
-  body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; transition: background-color 0.5s ease; }
-  body.time-up { background-color: #ffdddd; } /* Light red background */
-  #game-container { border: 1px solid #ccc; padding: 20px; margin-top: 20px; display: flex; justify-content: space-around; width: 80%; max-width: 800px; }
-  .team-column { flex: 1; padding: 15px; text-align: center; }
-  h2 { margin-top: 0; }
-  .team-name-input { width: 80%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; font-size: 1.1em; text-align: center; }
-  #timer-controls { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-  #timer-controls input[type="number"] { width: 60px; padding: 5px; }
-  #timer { font-size: 1.5em; margin-bottom: 10px; }
-  .team-members { list-style: none; padding: 0; }
-  .team-members li { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
-  .team-members li:last-child { border-bottom: none; }
-  .team-members li.playing { font-weight: bold; background-color: #f0f0f0; }
-  .score-button { padding: 10px; margin: 5px; cursor: pointer; font-size: 1em; }
-  #round-info { margin-top: 15px; font-weight: bold; }
+  body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background-color 0.5s ease;
+    margin: 0; /* Reset default body margin */
+    padding: 20px; /* Add some padding around content */
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+  }
+
+  body.time-up {
+    background-color: #ffdddd;
+  }
+
+  #game-container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-top: 20px;
+    width: 90%; /* Adjust width for smaller screens */
+    max-width: 800px; /* Limit width on larger screens */
+    display: flex;
+    justify-content: space-around;
+    flex-direction: row; /* Default to row for wider screens */
+    box-sizing: border-box;
+  }
+
+  .team-column {
+    flex: 1;
+    padding: 15px;
+    text-align: center;
+    margin: 5px; /* Add some margin between columns */
+  }
+
+  h2 {
+    margin-top: 0;
+  }
+
+  .team-name-input {
+    width: 80%;
+    margin-bottom: 10px;
+    padding: 8px;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    text-align: center;
+  }
+
+  #timer-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-direction: column; /* Stack controls on smaller screens */
+  }
+
+  #timer-controls label,
+  #timer-controls input,
+  #timer-controls button,
+  #timer-controls #timer {
+    margin-bottom: 5px; /* Add spacing between stacked elements */
+    width: 100%; /* Make controls take full width on smaller screens */
+    box-sizing: border-box;
+    text-align: center; /* Center text in controls */
+  }
+
+  #timer-controls input[type="number"] {
+    max-width: 80px; /* Limit width of number input */
+  }
+
+  #timer {
+    font-size: 1.5em;
+  }
+
+  .team-members {
+    list-style: none;
+    padding: 0;
+  }
+
+  .team-members li {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+  }
+
+  .team-members li:last-child {
+    border-bottom: none;
+  }
+
+  .team-members li.playing {
+    font-weight: bold;
+    background-color: #f0f0f0;
+  }
+
+  .score-button {
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    width: 80%; /* Adjust button width */
+    box-sizing: border-box;
+  }
+
+  #round-info {
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: center; /* Center round info */
+  }
+
+  #current-player-display {
+    text-align: center; /* Center current player info */
+    margin-bottom: 10px;
+  }
+
+  #message {
+    text-align: center; /* Center messages */
+  }
+
+  /* Media query for screens smaller than 600px (typical mobile) */
+  @media (max-width: 600px) {
+    #game-container {
+      flex-direction: column; /* Stack team columns on mobile */
+      align-items: center; /* Center team columns */
+    }
+
+    .team-column {
+      width: 90%; /* Make team columns take more width on mobile */
+      margin-bottom: 15px; /* Add more space between stacked columns */
+    }
+
+    .score-button {
+      width: 100%; /* Make score button full width on mobile */
+    }
+  }
 </style>
 </head>
 <body>
