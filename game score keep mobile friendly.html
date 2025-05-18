@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Team Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background-color 0.5s ease;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    font-size: 16px; /* Default base font size */
+  }
+
+  body.time-up {
+    background-color: #ffdddd;
+  }
+
+  #game-container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-top: 20px;
+    width: 95%; /* Use more of the mobile screen width */
+    max-width: 800px;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: row;
+    box-sizing: border-box;
+  }
+
+  .team-column {
+    flex: 1;
+    padding: 15px;
+    text-align: center;
+    margin: 5px;
+  }
+
+  h2 {
+    margin-top: 0;
+    font-size: 1.8em; /* Slightly larger heading on mobile */
+  }
+
+  .team-name-input {
+    width: 100%; /* Full width on mobile */
+    margin-bottom: 10px;
+    padding: 10px; /* Larger padding for touch */
+    box-sizing: border-box;
+    font-size: 1.2em;
+    text-align: center;
+  }
+
+  #timer-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  #timer-controls label,
+  #timer-controls input,
+  #timer-controls button,
+  #timer-controls #timer {
+    margin-bottom: 8px; /* More spacing */
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    padding: 10px; /* Larger padding for touch */
+    font-size: 1.1em;
+  }
+
+  #timer-controls input[type="number"] {
+    max-width: 120px; /* Slightly wider number input */
+  }
+
+  #timer {
+    font-size: 2em; /* Larger timer font on mobile */
+    margin-bottom: 15px; /* More spacing */
+  }
+
+  .team-members {
+    list-style: none;
+    padding: 0;
+  }
+
+  .team-members li {
+    padding: 12px; /* Larger padding for touch */
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 1.1em;
+  }
+
+  .team-members li:last-child {
+    border-bottom: none;
+  }
+
+  .team-members li.playing {
+    font-weight: bold;
+    background-color: #f0f0f0;
+  }
+
+  .score-button {
+    padding: 12px 20px; /* Larger padding for touch */
+    margin: 8px 0; /* More vertical margin */
+    cursor: pointer;
+    font-size: 1.2em;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #round-info {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.3em;
+  }
+
+  #current-player-display {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+  }
+
+  #message {
+    text-align: center;
+    font-size: 1.1em;
+  }
+
+  /* Media query for screens smaller than 600px (typical mobile) */
+  @media (max-width: 600px) {
+    body {
+      padding: 15px; /* Slightly less padding on very small screens */
+      font-size: 18px; /* Increase base font size for better readability */
+    }
+
+    #game-container {
+      flex-direction: column;
+      align-items: center;
+      width: 98%; /* Use almost full width */
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .team-column {
+      width: 95%;
+      margin-bottom: 20px;
+      padding: 15px;
+    }
+
+    h2 {
+      font-size: 2em;
+    }
+
+    #timer-controls {
+      margin-bottom: 20px;
+    }
+
+    #timer {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+  }
+
+  /* Further optimization for iPhone XR and similar (specific viewport width) */
+  @media (max-width: 414px) and (max-height: 896px) { /* iPhone XR in portrait */
+    body {
+      font-size: 20px; /* Slightly larger base font for this screen size */
+      padding: 10px;
+    }
+
+    h2 {
+      font-size: 2.2em;
+    }
+
+    #timer {
+      font-size: 2.8em;
+    }
+
+    .team-members li {
+      padding: 14px;
+      font-size: 1.2em;
+    }
+
+    .team-name-input,
+    #timer-controls label,
+    #timer-controls input,
+    #timer-controls button,
+    #timer-controls #timer,
+    .score-button,
+    #round-info,
+    #current-player-display,
+    #message {
+      padding: 12px;
+      font-size: 1.3em;
+      margin-bottom: 10px;
+    }
+  }
+
+  /* New Button Styles */
+  #next-round-button {
+    padding: 12px 20px;
+    margin-top: 15px;
+    cursor: pointer;
+    font-size: 1.2em;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    box-sizing: border-box;
+    width: 100%; /* Full width on mobile */
+    max-width: 200px; /* Limit width on larger screens */
+    text-align: center;
+  }
+
+  #next-round-button:hover {
+    background-color: #3e8e41; /* Darker green on hover */
+  }
+</style>
+</head>
+<body>
+  <h1>Team Score Keeper</h1>
+
+  <div id="timer-controls">
+    <label for="duration">Set Timer (seconds):</label>
+    <input type="number" id="duration" value="30" min="1">
+    <button id="start-timer">Start Timer</button>
+    <div id="timer">Time: <span id="time-remaining">30</span></div>
+  </div>
+
+  <div id="game-container">
+    <div class="team-column">
+      <h2>Team 1</h2>
+      <input type="text" id="team1-name" class="team-name-input" value="Team 1">
+      <input type="text" id="team1-new-member" placeholder="Add Member">
+      <button onclick="addTeamMember('team1')">Add</button>
+      <ul id="team1-members" class="team-members"></ul>
+      <button class="score-button" onclick="addScore('team1')">Add Tally</button>
+      <div id="team1-score">Score: 0</div>
+    </div>
+
+    <div class="team-column">
+      <h2>Team 2</h2>
+      <input type="text" id="team2-name" class="team-name-input" value="Team 2">
+      <input type="text" id="team2-new-member" placeholder="Add Member">
+      <button onclick="addTeamMember('team2')">Add</button>
+      <ul id="team2-members" class="team-members"></ul>
+      <button class="score-button" onclick="addScore('team2')">Add Tally</button>
+      <div id="team2-score">Score: 0</div>
+    </div>
+  </div>
+
+  <button id="next-round-button" onclick="nextRound()">Next Round</button>
+
+  <div id="round-info">Round: <span id="current-round">1</span></div>
+  <div id="current-player-display">Current Player: <span id="current-player"></span></div>
+  <div id="message"></div>
+
+  <script>
+    // Your JavaScript code remains mostly the same, with one small addition
+    let timeLeft = parseInt(document.getElementById("duration").value);
+    let timerInterval;
+    let round = 1;
+    let team1Score = 0;
+    let team2Score = 0;
+    let team1Members = [];
+    let team2Members = [];
+    let currentPlayer = "";
+    const flashDuration = 1500; // 1.5 seconds in milliseconds
+    const bodyElement = document.body;
+
+    const durationInput = document.getElementById("duration");
+    const startTimerButton = document.getElementById("start-timer");
+    const timeRemainingElement = document.getElementById("time-remaining");
+    const team1NameInput = document.getElementById("team1-name");
+    const team2NameInput = document.getElementById("team2-name");
+    const team1Heading = document.querySelector("#game-container .team-column:first-child h2");
+    const team2Heading = document.querySelector("#game-container .team-column:last-child h2");
+    const team1MembersList = document.getElementById("team1-members");
+    const team2MembersList = document.getElementById("team2-members");
+    const team1ScoreDisplay = document.getElementById("team1-score");
+    const team2ScoreDisplay = document.getElementById("team2-score");
+    const roundDisplay = document.getElementById("current-round");
+    const currentPlayerDisplay = document.getElementById("current-player");
+    const messageElement = document.getElementById("message");
+
+    function updateDisplay() {
+      timeRemainingElement.textContent = timeLeft;
+      team1ScoreDisplay.textContent = `Score: ${team1Score}`;
+      team2ScoreDisplay.textContent = `Score: ${team2Score}`;
+      roundDisplay.textContent = round;
+      currentPlayerDisplay.textContent = currentPlayer;
+
+      // Update team names in the headers using direct selectors
+      team1Heading.textContent = team1NameInput.value || "Team 1";
+      team2Heading.textContent = team2NameInput.value || "Team 2";
+
+      renderTeamMembers('team1');
+      renderTeamMembers('team2');
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = parseInt(durationInput.value);
+      if (isNaN(timeLeft) || timeLeft <= 0) {
+        alert("Please enter a valid timer duration.");
+        return;
+      }
+      bodyElement.classList.remove("time-up"); // Ensure the flash class is removed at the start of a new timer
+      updateDisplay();
+      startTimerButton.disabled = true;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timeRemainingElement.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          bodyElement.classList.add("time-up"); // Add the class to trigger the red flash
+          setTimeout(() => {
+            bodyElement.classList.remove("time-up"); // Remove the class after the flash duration
+            alert(`Time's up! Round ${round} over.`);
+            startTimerButton.disabled = false;
+            nextRound(); // The round automatically advances when the timer is up
+          }, flashDuration);
+        }
+      }, 1000);
+    }
+
+    function addTeamMember(teamId) {
+      const inputElement = document.getElementById(`${teamId}-new-member`);
+      const memberName = inputElement.value.trim();
+      if (memberName) {
+        if (teamId === 'team1') {
+          team1Members.push(memberName);
+        } else {
+          team2Members.push(memberName);
+        }
+        inputElement.value = "";
+        renderTeamMembers(teamId);
+      }
+    }
+
+    function renderTeamMembers(teamId) {
+      const listElement = document.getElementById(`${teamId}-members`);
+      listElement.innerHTML = "";
+      const members = (teamId === 'team1') ? team1Members : team2Members;
+      members.forEach(member => {
+        const listItem = document.createElement("li");
+        listItem.textContent = member;
+        listItem.addEventListener("click", () => setCurrentPlayer(member));
+        if (member === currentPlayer) {
+          listItem.classList.add("playing");
+        }
+        listElement.appendChild(listItem);
+      });
+    }
+
+    function addScore(teamId) {
+      if (teamId === 'team1') {
+        team1Score++;
+      } else {
+        team2Score++;
+      }
+      updateDisplay();
+    }
+
+    function nextRound() {
+      round++;
+      currentPlayer = ""; // Reset current player for the new round
+      updateDisplay();
+      messageElement.textContent = `Starting Round ${round}`;
+    }
+
+    function setCurrentPlayer(playerName) {
+      currentPlayer = playerName;
+      updateDisplay();
+    }
+
+    startTimerButton.addEventListener("click", startTimer);
+
+    renderTeamMembers('team1');
+    renderTeamMembers('team2');
+    updateDisplay(); // Initial display update
+  </script>
+
+</body>
+</html>
